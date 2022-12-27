@@ -1,6 +1,6 @@
 # Rusty Newsletter
 
-A simple newsletter service in Rust based on "Zero To Production In Rust" book
+A simple newsletter service in Rust based on "Zero To Production In Rust" book.
 
 ## License
 
