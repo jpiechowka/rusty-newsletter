@@ -1,4 +1,4 @@
-use rusty_newsletter::run_server;
+use rusty_newsletter::startup::run_server;
 use std::net::TcpListener;
 
 #[tokio::main]

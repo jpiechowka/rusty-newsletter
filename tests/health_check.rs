@@ -1,3 +1,4 @@
+use rusty_newsletter::startup::run_server;
 use std::net::TcpListener;
 use test_case::test_case;
 
@@ -5,8 +6,7 @@ fn spawn_app() -> String {
     // Port zero will provide random port from the OS
     let tcp_listener = TcpListener::bind("127.0.0.1:0").expect("Failed to create TCP listener");
     let port = tcp_listener.local_addr().unwrap().port();
-    let server =
-        rusty_newsletter::run_server(tcp_listener).expect("Failed to start server for testing");
+    let server = run_server(tcp_listener).expect("Failed to start server for testing");
     let _ = tokio::spawn(server);
 
     format!("http://127.0.0.1:{}", port)
