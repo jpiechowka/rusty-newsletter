@@ -1,15 +1,30 @@
-use rusty_newsletter::startup::run_server;
+use rusty_newsletter::{config::get_config, startup::run_server};
+use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
 use test_case::test_case;
 
-fn spawn_app() -> String {
+pub struct TestApp {
+    pub serve_address: String,
+    pub db_conn_pool: PgPool,
+}
+
+fn spawn_app() -> TestApp {
     // Port zero will provide random port from the OS
     let tcp_listener = TcpListener::bind("127.0.0.1:0").expect("Failed to create TCP listener");
     let port = tcp_listener.local_addr().unwrap().port();
-    let server = run_server(tcp_listener).expect("Failed to start server for testing");
-    let _ = tokio::spawn(server);
+    let serve_address = format!("http://127.0.0.1:{}", port);
+    let mut config = get_configuration().expect("Failed to read configuration.");
+    config.database.database_name = Uuid::new_v4().to_string();
+    let db_conn_pool = configure_database(&config.database).await;
 
-    format!("http://127.0.0.1:{}", port)
+    let server = run_server(tcp_listener, db_conn_pool.clone())
+        .expect("Failed to start server for testing");
+
+    let _ = tokio::spawn(server);
+    TestApp {
+        serve_address,
+        db_conn_pool,
+    }
 }
 
 #[tokio::test]
@@ -30,6 +45,12 @@ async fn health_check_works() {
 #[tokio::test]
 async fn subscribe_returns_200_status_for_valid_form_data() {
     let address = spawn_app();
+    let config = get_config().expect("Failed to read application configuration");
+    let db_conn_string = config.db_settings.connection_string();
+    let db_conn = PgConnection::connect(&db_conn_string)
+        .await
+        .expect("Failed to establish PostgreSQL connection");
+
     let http_client = reqwest::Client::new();
 
     let body = "name=testy%20mctest&email=testy.mctest%40example.com";
@@ -42,6 +63,14 @@ async fn subscribe_returns_200_status_for_valid_form_data() {
         .expect("Failed to send request");
 
     assert_eq!(200, response.status().as_u16());
+
+    let saved_data = sqlx::query!("SELECT email, name FROM subscriptions",)
+        .fetch_one(&mut db_conn)
+        .await
+        .expect("Failed to fetch saved subscription.");
+
+    assert_eq!(saved_data.email, "testy.mctest@example.com");
+    assert_eq!(saved_data.name, "testy mctest");
 }
 
 #[tokio::test]
