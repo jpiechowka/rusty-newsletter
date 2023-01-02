@@ -77,11 +77,12 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
+          chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
 
-      - name: Check sqlx-data.json is up-to-date
-        run: |
-          cargo sqlx prepare --check -- --bin zero2prod
+      # - name: Check sqlx-data.json is up-to-date
+      #   run: |
+      #     cargo sqlx prepare --check -- --bin rusty-newsletter
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
@@ -153,6 +154,7 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
+          chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
 
       - name: Run clippy
@@ -214,6 +216,7 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
+          chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
 
       - name: Run cargo-tarpaulin

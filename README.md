@@ -1,6 +1,19 @@
 # Rusty Newsletter
 
-A simple newsletter service in Rust based on "Zero To Production In Rust" book.
+A simple newsletter service in Rust based on "Zero To Production In Rust" book. Used mainly as learning resource
+
+## Resources
+
+* https://www.zero2prod.com/
+* https://github.com/LukeMathWalker/zero-to-production
+* https://actix.rs/
+* https://tokio.rs/
+* https://github.com/seanmonstar/reqwest
+
+## Features
+
+* Functional CI pipeline (see `.github` dir)
+* Dependency updates (Dependabot) and security auditing (see `.github` dir)
 
 ## License
 
