@@ -77,6 +77,7 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
+          chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
 
       - name: Check sqlx-data.json is up-to-date
@@ -153,6 +154,7 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
+          chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
 
       - name: Run clippy
@@ -214,6 +216,7 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
+          chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
 
       - name: Run cargo-tarpaulin
