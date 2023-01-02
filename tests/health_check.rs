@@ -17,14 +17,36 @@ fn spawn_app() -> TestApp {
     config.database.database_name = Uuid::new_v4().to_string();
     let db_conn_pool = configure_database(&config.database).await;
 
-    let server = run_server(tcp_listener, db_conn_pool.clone())
-        .expect("Failed to start server for testing");
+    let server =
+        run_server(tcp_listener, db_conn_pool.clone()).expect("Failed to start server for testing");
 
     let _ = tokio::spawn(server);
     TestApp {
         serve_address,
         db_conn_pool,
     }
+}
+
+pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
+    // Create database
+    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+        .await
+        .expect("Failed to establish PostgreSQL connection");
+    connection
+        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+        .await
+        .expect("Failed to create database");
+
+    // Migrate database
+    let connection_pool = PgPool::connect(&config.connection_string())
+        .await
+        .expect("Failed to establish PostgreSQL connection");
+    sqlx::migrate!("./migrations")
+        .run(&connection_pool)
+        .await
+        .expect("Failed to migrate the database");
+
+    connection_pool
 }
 
 #[tokio::test]
