@@ -1,14 +1,14 @@
 use actix_web::{dev::Server, web, App, HttpServer};
-use sqlx::PgConnection;
+use sqlx::PgPool;
 use std::net::TcpListener;
 
 use crate::routes::{health_check, subscribe};
 
 pub fn run_server(
     tcp_listener: TcpListener,
-    db_connection: PgConnection,
+    db_conn_pool: PgPool,
 ) -> Result<Server, std::io::Error> {
-    let db_conn_pool = web::Data::new(db_pool);
+    let db_conn_pool = web::Data::new(db_conn_pool);
 
     let server = HttpServer::new(move || {
         App::new()

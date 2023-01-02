@@ -23,7 +23,7 @@ pub async fn subscribe(
         form.name,
         Utc::now()
     )
-    .execute(pool.as_ref())
+    .execute(db_conn_pool.as_ref())
     .await
     {
         Ok(_) => HttpResponse::Ok().finish(),
