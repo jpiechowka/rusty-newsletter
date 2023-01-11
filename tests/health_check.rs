@@ -1,11 +1,28 @@
+use once_cell::sync::Lazy;
 use rusty_newsletter::{
     config::{get_config, DatabaseSettings},
     startup::run_server,
+    telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
+use secrecy::ExposeSecret;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use test_case::test_case;
 use uuid::Uuid;
+
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let default_filter_level = "info".to_string();
+    let subscriber_name = "test".to_string();
+    if std::env::var("TEST_LOG").is_ok() {
+        let subscriber =
+            get_tracing_subscriber(subscriber_name, default_filter_level, std::io::stdout);
+        init_tracing_subscriber(subscriber);
+    } else {
+        let subscriber =
+            get_tracing_subscriber(subscriber_name, default_filter_level, std::io::sink);
+        init_tracing_subscriber(subscriber);
+    };
+});
 
 pub struct TestApp {
     pub serve_address: String,
@@ -13,6 +30,8 @@ pub struct TestApp {
 }
 
 async fn spawn_app() -> TestApp {
+    Lazy::force(&TRACING);
+
     // Port zero will provide random port from the OS
     let tcp_listener = TcpListener::bind("127.0.0.1:0").expect("Failed to create TCP listener");
     let port = tcp_listener.local_addr().unwrap().port();
@@ -33,9 +52,10 @@ async fn spawn_app() -> TestApp {
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
-    let mut connection = PgConnection::connect(&config.connection_string_without_db())
-        .await
-        .expect("Failed to establish PostgreSQL connection");
+    let mut connection =
+        PgConnection::connect(config.connection_string_without_db().expose_secret())
+            .await
+            .expect("Failed to establish PostgreSQL connection");
 
     // Create database
     connection
@@ -43,7 +63,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to create database");
 
-    let connection_pool = PgPool::connect(&config.connection_string())
+    let connection_pool = PgPool::connect(config.connection_string().expose_secret())
         .await
         .expect("Failed to establish PostgreSQL connection");
 

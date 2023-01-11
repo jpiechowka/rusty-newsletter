@@ -1,11 +1,20 @@
-use rusty_newsletter::{config::get_config, startup::run_server};
+use rusty_newsletter::{
+    config::get_config,
+    startup::run_server,
+    telemetry::{get_tracing_subscriber, init_tracing_subscriber},
+};
+use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    let tracing_subscriber =
+        get_tracing_subscriber("rusty-newsletter".into(), "info".into(), std::io::stdout);
+    init_tracing_subscriber(tracing_subscriber);
+
     let config = get_config().expect("Failed to read application configuration");
-    let db_conn_pool = PgPool::connect(&config.db_settings.connection_string())
+    let db_conn_pool = PgPool::connect(config.db_settings.connection_string().expose_secret())
         .await
         .expect("Failed to establish PostgreSQL connection");
 
