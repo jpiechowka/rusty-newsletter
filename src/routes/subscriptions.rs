@@ -9,24 +9,34 @@ pub struct SubscribeFormData {
     name: String,
 }
 
+#[allow(clippy::async_yields_async)]
+#[tracing::instrument(
+    name = "Adding a new subscriber",
+    skip(form, db_conn_pool),
+    fields(
+        subscriber_email = %form.email,
+        subscriber_name = %form.name
+    )
+)]
 pub async fn subscribe(
     form: web::Form<SubscribeFormData>,
     db_conn_pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    let request_id = Uuid::new_v4();
-    tracing::info!(
-        "request_id {} - Adding '{}' '{}' as a new newsletter subscriber",
-        request_id,
-        form.email,
-        form.name
-    );
+    match insert_subscriber(&form, &db_conn_pool).await {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
 
-    tracing::info!(
-        "request_id {} - Saving new subscriber details in the database",
-        request_id
-    );
-
-    match sqlx::query!(
+#[tracing::instrument(
+    name = "Saving new subscriber details in the database",
+    skip(form, db_conn_pool)
+)]
+pub async fn insert_subscriber(
+    form: &SubscribeFormData,
+    db_conn_pool: &PgPool,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at)
         VALUES ($1, $2, $3, $4)
@@ -36,23 +46,11 @@ pub async fn subscribe(
         form.name,
         Utc::now()
     )
-    .execute(db_conn_pool.as_ref())
+    .execute(db_conn_pool)
     .await
-    {
-        Ok(_) => {
-            tracing::info!(
-                "request_id {} - New subscriber details have been saved",
-                request_id
-            );
-            HttpResponse::Ok().finish()
-        }
-        Err(e) => {
-            tracing::error!(
-                "request_id {} - Failed to execute query: {:?}",
-                request_id,
-                e
-            );
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+    Ok(())
 }

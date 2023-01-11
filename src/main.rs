@@ -3,6 +3,7 @@ use rusty_newsletter::{
     startup::run_server,
     telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
+use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
 
@@ -13,7 +14,7 @@ async fn main() -> std::io::Result<()> {
     init_tracing_subscriber(tracing_subscriber);
 
     let config = get_config().expect("Failed to read application configuration");
-    let db_conn_pool = PgPool::connect(&config.db_settings.connection_string())
+    let db_conn_pool = PgPool::connect(&config.db_settings.connection_string().expose_secret())
         .await
         .expect("Failed to establish PostgreSQL connection");
 
