@@ -31,6 +31,9 @@ pub async fn subscribe(
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
     skip(form, db_conn_pool)
+    fields(
+        subscriber_email = %form.email
+    )
 )]
 pub async fn insert_subscriber(
     form: &SubscribeFormData,
