@@ -14,6 +14,7 @@ A simple newsletter service in Rust based on "Zero To Production In Rust" book. 
 
 * Functional CI pipeline (see `.github` dir)
 * Dependency updates (Dependabot) and security auditing (see `.github` dir)
+* Structured logging and tracing
 
 ## License
 
