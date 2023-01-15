@@ -1,10 +1,9 @@
 use once_cell::sync::Lazy;
 use rusty_newsletter::{
-    config::{get_config, DatabaseSettings},
+    configuration::{get_configuration, DatabaseSettings},
     startup::run_server,
     telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
-use secrecy::ExposeSecret;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use test_case::test_case;
@@ -37,9 +36,9 @@ async fn spawn_app() -> TestApp {
     let port = tcp_listener.local_addr().unwrap().port();
     let serve_address = format!("http://127.0.0.1:{}", port);
 
-    let mut config = get_config().expect("Failed to read application configuration");
-    config.db_settings.database_name = Uuid::new_v4().to_string();
-    let db_conn_pool = configure_database(&config.db_settings).await;
+    let mut config = get_configuration().expect("Failed to read application configuration");
+    config.database.database_name = Uuid::new_v4().to_string();
+    let db_conn_pool = configure_database(&config.database).await;
 
     let server =
         run_server(tcp_listener, db_conn_pool.clone()).expect("Failed to start server for testing");
@@ -52,10 +51,9 @@ async fn spawn_app() -> TestApp {
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
-    let mut connection =
-        PgConnection::connect(config.connection_string_without_db().expose_secret())
-            .await
-            .expect("Failed to establish PostgreSQL connection");
+    let mut connection = PgConnection::connect_with(&config.without_db())
+        .await
+        .expect("Failed to establish PostgreSQL connection");
 
     // Create database
     connection
@@ -63,7 +61,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to create database");
 
-    let connection_pool = PgPool::connect(config.connection_string().expose_secret())
+    let connection_pool = PgPool::connect_with(config.with_db())
         .await
         .expect("Failed to establish PostgreSQL connection");
 
