@@ -2,11 +2,6 @@ use unicode_segmentation::UnicodeSegmentation;
 
 const FORBIDDEN_CHARACTERS: [char; 9] = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
 
-pub struct NewSubscriber {
-    pub email: String,
-    pub name: SubscriberName,
-}
-
 #[derive(Debug)]
 pub struct SubscriberName(String);
 
@@ -69,7 +64,7 @@ mod tests {
 
     #[test]
     fn a_valid_name_is_parsed_successfully() {
-        let name = "Ursula Le Guin".to_string();
+        let name = "Testy McTest".to_string();
         assert_ok!(SubscriberName::parse(name));
     }
 }
