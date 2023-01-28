@@ -25,6 +25,7 @@ mod tests {
     use claims::assert_err;
     use fake::faker::internet::en::SafeEmail;
     use fake::Fake;
+    use rand::{rngs::StdRng, SeedableRng};
 
     #[test]
     fn empty_string_is_rejected() {
@@ -47,9 +48,11 @@ mod tests {
     #[derive(Debug, Clone)]
     struct ValidEmailFixture(pub String);
 
+    // https://github.com/LukeMathWalker/zero-to-production/issues/34
     impl quickcheck::Arbitrary for ValidEmailFixture {
         fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> Self {
-            let email = SafeEmail().fake_with_rng(g);
+            let mut rng = StdRng::seed_from_u64(u64::arbitrary(g));
+            let email = SafeEmail().fake_with_rng(&mut rng);
             Self(email)
         }
     }
