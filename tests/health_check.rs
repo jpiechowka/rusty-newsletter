@@ -136,6 +136,9 @@ async fn subscribe_returns_404_status_for_invalid_http_method() {
 #[test_case("name=testy%20mctest"; "missing email")]
 #[test_case("email=testy.mctest%40example.com"; "missing name")]
 #[test_case(""; "missing email and name")]
+#[test_case("name=&email=testy.mctest%40example.com"; "empty name")]
+#[test_case("name=testy%20mctest&email="; "empty email")]
+#[test_case("name=testy%20mctest&email=invalid-email"; "invalid email")]
 #[tokio::test]
 async fn subscribe_returns_400_status_when_data_is_incorrect(invalid_body: &'static str) {
     let app = spawn_app().await;
