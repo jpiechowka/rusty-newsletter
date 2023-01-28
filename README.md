@@ -16,6 +16,8 @@ A simple newsletter service in Rust based on "Zero To Production In Rust" book. 
 * Functional CI pipeline (see `.github` dir)
 * Dependency updates (Dependabot) and security auditing (see `.github` dir)
 * Integration tests working with PostgreSQL database
+* Unit testing using different approaches
+* Input parsing and validation
 * Structured logging and tracing
 
 ## License
