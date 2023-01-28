@@ -2,6 +2,11 @@ use unicode_segmentation::UnicodeSegmentation;
 
 const FORBIDDEN_CHARACTERS: [char; 9] = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
 
+pub struct NewSubscriber {
+    pub email: String,
+    pub name: SubscriberName,
+}
+
 pub struct SubscriberName(String);
 
 impl SubscriberName {
@@ -15,5 +20,11 @@ impl SubscriberName {
         } else {
             Self(s)
         }
+    }
+}
+
+impl AsRef<str> for SubscriberName {
+    fn as_ref(&self) -> &str {
+        &self.0
     }
 }

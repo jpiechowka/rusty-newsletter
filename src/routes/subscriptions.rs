@@ -3,13 +3,14 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use crate::domain::{NewSubscriber, SubscriberName};
+
 #[derive(serde::Deserialize)]
 pub struct SubscribeFormData {
     email: String,
     name: String,
 }
 
-#[allow(clippy::async_yields_async)]
 #[tracing::instrument(
     name = "Adding a new subscriber",
     skip(form, db_conn_pool),
@@ -22,7 +23,12 @@ pub async fn subscribe(
     form: web::Form<SubscribeFormData>,
     db_conn_pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    match insert_subscriber(&form, &db_conn_pool).await {
+    let new_subscriber = NewSubscriber {
+        email: form.0.email,
+        name: SubscriberName::parse(form.0.name),
+    };
+
+    match insert_subscriber(&db_conn_pool, &new_subscriber).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
@@ -30,14 +36,14 @@ pub async fn subscribe(
 
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
-    skip(form, db_conn_pool)
+    skip(db_conn_pool, new_subscriber)
     fields(
-        subscriber_email = %form.email
+        subscriber_email = %new_subscriber.email
     )
 )]
 pub async fn insert_subscriber(
-    form: &SubscribeFormData,
     db_conn_pool: &PgPool,
+    new_subscriber: &NewSubscriber,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
@@ -45,8 +51,8 @@ pub async fn insert_subscriber(
         VALUES ($1, $2, $3, $4)
         "#,
         Uuid::new_v4(),
-        form.email,
-        form.name,
+        new_subscriber.email,
+        new_subscriber.name.as_ref(),
         Utc::now()
     )
     .execute(db_conn_pool)
