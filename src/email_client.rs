@@ -4,6 +4,7 @@ use secrecy::{ExposeSecret, Secret};
 use crate::domain::SubscriberEmail;
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "PascalCase")]
 struct SendEmailRequest {
     from: String,
     to: String,
