@@ -13,12 +13,14 @@ A simple newsletter service in Rust based on "Zero To Production In Rust" book. 
 ## Features
 
 * Full-fledged Actix Web REST application
+* Functioning email client (obviously) - email sending using Postmark service
 * Functional CI pipeline (see `.github` dir)
 * Dependency updates (Dependabot) and security auditing (see `.github` dir)
 * Integration tests working with PostgreSQL database
 * Unit testing using different approaches
 * Input parsing and validation
 * Structured logging and tracing
+* Ability to specify config for different environments
 
 ## License
 
