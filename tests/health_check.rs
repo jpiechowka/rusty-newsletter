@@ -37,15 +37,19 @@ async fn spawn_app() -> TestApp {
     let port = tcp_listener.local_addr().unwrap().port();
     let serve_address = format!("http://127.0.0.1:{}", port);
 
-    let mut config = get_configuration().expect("Failed to read application configuration");
-    config.database.database_name = Uuid::new_v4().to_string();
-    let db_conn_pool = configure_database(&config.database).await;
+    let mut configuration = get_configuration().expect("Failed to read application configuration");
+    configuration.database.database_name = Uuid::new_v4().to_string();
+    let db_conn_pool = configure_database(&configuration.database).await;
 
-    let sender_email = config
+    let sender_email = configuration
         .email_client
         .sender()
         .expect("Invalid sender email address");
-    let email_client = EmailClient::new(config.email_client.base_url, sender_email);
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+    );
 
     let server = run_server(tcp_listener, db_conn_pool.clone(), email_client)
         .expect("Failed to start server for testing");
