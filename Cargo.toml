@@ -42,7 +42,7 @@ serde-aux = "4.1.2"
 unicode-segmentation = "1.10.0"
 validator = "0.16.0"
 rand = "0.8.5"
-reqwest = "0.11.13"
+reqwest = { version = "0.11.13", features = ["json"] }
 
 
 [dev-dependencies]
