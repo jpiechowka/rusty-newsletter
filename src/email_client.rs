@@ -51,16 +51,16 @@ impl EmailClient {
             text_body: text_content,
         };
 
-        let _builder = self
-            .http_client
-            .post(url)
+        self.http_client
+            .post(&url)
             .header(
                 "X-Postmark-Server-Token",
                 self.authorization_token.expose_secret(),
             )
             .json(&request_body)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
         Ok(())
     }
 }
