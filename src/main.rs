@@ -1,5 +1,6 @@
 use rusty_newsletter::{
     configuration::get_configuration,
+    email_client::EmailClient,
     startup::run_server,
     telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
