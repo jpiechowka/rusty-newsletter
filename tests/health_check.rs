@@ -40,8 +40,14 @@ async fn spawn_app() -> TestApp {
     config.database.database_name = Uuid::new_v4().to_string();
     let db_conn_pool = configure_database(&config.database).await;
 
-    let server =
-        run_server(tcp_listener, db_conn_pool.clone()).expect("Failed to start server for testing");
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address");
+    let email_client = EmailClient::new(configuration.email_client.base_url, sender_email);
+
+    let server = run_server(tcp_listener, db_conn_pool.clone(), email_client)
+        .expect("Failed to start server for testing");
 
     let _ = tokio::spawn(server);
     TestApp {
