@@ -4,17 +4,8 @@ use test_case::test_case;
 #[tokio::test]
 async fn subscribe_returns_200_status_for_valid_form_data() {
     let app = spawn_app().await;
-    let http_client = reqwest::Client::new();
-
     let body = "name=testy%20mctest&email=testy.mctest%40example.com";
-
-    let response = http_client
-        .post(&format!("{}/subscriptions", &app.serve_address))
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(body)
-        .send()
-        .await
-        .expect("Failed to send request");
+    let response = app.post_subscriptions(body.into()).await;
 
     assert_eq!(200, response.status().as_u16());
 
@@ -30,17 +21,8 @@ async fn subscribe_returns_200_status_for_valid_form_data() {
 #[tokio::test]
 async fn subscribe_returns_404_status_for_invalid_http_method() {
     let app = spawn_app().await;
-    let http_client = reqwest::Client::new();
-
     let body = "name=testy%20mctest&email=testy.mctest%40example.com";
-
-    let response = http_client
-        .get(&format!("{}/subscriptions", &app.serve_address))
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(body)
-        .send()
-        .await
-        .expect("Failed to send request");
+    let response = app.post_subscriptions(body.into()).await;
 
     assert_eq!(404, response.status().as_u16());
 }
@@ -54,15 +36,6 @@ async fn subscribe_returns_404_status_for_invalid_http_method() {
 #[tokio::test]
 async fn subscribe_returns_400_status_when_data_is_incorrect(invalid_body: &'static str) {
     let app = spawn_app().await;
-    let http_client = reqwest::Client::new();
-
-    let response = http_client
-        .post(&format!("{}/subscriptions", &app.serve_address))
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(invalid_body)
-        .send()
-        .await
-        .expect("Failed to send request");
-
+    let response = app.post_subscriptions(invalid_body.into()).await;
     assert_eq!(400, response.status().as_u16());
 }
