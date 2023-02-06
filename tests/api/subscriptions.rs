@@ -18,15 +18,6 @@ async fn subscribe_returns_200_status_for_valid_form_data() {
     assert_eq!(saved_data.name, "testy mctest");
 }
 
-#[tokio::test]
-async fn subscribe_returns_404_status_for_invalid_http_method() {
-    let app = spawn_app().await;
-    let body = "name=testy%20mctest&email=testy.mctest%40example.com";
-    let response = app.post_subscriptions(body.into()).await;
-
-    assert_eq!(404, response.status().as_u16());
-}
-
 #[test_case("name=testy%20mctest"; "missing email")]
 #[test_case("email=testy.mctest%40example.com"; "missing name")]
 #[test_case(""; "missing email and name")]
