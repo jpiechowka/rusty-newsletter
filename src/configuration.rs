@@ -38,8 +38,7 @@ impl EmailClientSettings {
     }
 }
 
-#[derive(serde::Deserialize)]
-#[derive(Clone)]
+#[derive(serde::Deserialize, Clone)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
