@@ -1,12 +1,10 @@
 use once_cell::sync::Lazy;
 use rusty_newsletter::{
     configuration::{get_configuration, DatabaseSettings},
-    email_client::EmailClient,
-    startup::run_server,
+    startup::{get_connection_pool, Application},
     telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::net::TcpListener;
 use uuid::Uuid;
 
 static TRACING: Lazy<()> = Lazy::new(|| {
@@ -31,34 +29,27 @@ pub struct TestApp {
 pub async fn spawn_app() -> TestApp {
     Lazy::force(&TRACING);
 
-    // Port zero will provide random port from the OS
-    let tcp_listener = TcpListener::bind("127.0.0.1:0").expect("Failed to create TCP listener");
-    let port = tcp_listener.local_addr().unwrap().port();
-    let serve_address = format!("http://127.0.0.1:{}", port);
+    let configuration = {
+        let mut c = get_configuration().expect("Failed to read application configuration");
+        // Use a different database for each test case
+        c.database.database_name = Uuid::new_v4().to_string();
+        // Port zero will provide random port from the OS
+        c.application.port = 0;
+        c
+    };
 
-    let mut configuration = get_configuration().expect("Failed to read application configuration");
-    configuration.database.database_name = Uuid::new_v4().to_string();
-    let db_conn_pool = configure_database(&configuration.database).await;
+    configure_database(&configuration.database).await;
 
-    let sender_email = configuration
-        .email_client
-        .sender()
-        .expect("Invalid sender email address");
-    let timeout = configuration.email_client.timeout();
-    let email_client = EmailClient::new(
-        configuration.email_client.base_url,
-        sender_email,
-        configuration.email_client.authorization_token,
-        timeout,
-    );
+    let application = Application::build(configuration.clone())
+        .await
+        .expect("Failed to build application for testing");
 
-    let server = run_server(tcp_listener, db_conn_pool.clone(), email_client)
-        .expect("Failed to start server for testing");
+    let serve_address = format!("http://127.0.0.1:{}", application.port());
+    let _ = tokio::spawn(application.run_until_stopped());
 
-    let _ = tokio::spawn(server);
     TestApp {
         serve_address,
-        db_conn_pool,
+        db_conn_pool: get_connection_pool(&configuration.database),
     }
 }
 
