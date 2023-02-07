@@ -6,6 +6,7 @@ use rusty_newsletter::{
 };
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
+use wiremock::MockServer;
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
@@ -24,6 +25,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 pub struct TestApp {
     pub serve_address: String,
     pub db_conn_pool: PgPool,
+    pub email_server: MockServer,
 }
 
 impl TestApp {
@@ -41,12 +43,15 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     Lazy::force(&TRACING);
 
+    let email_server = MockServer::start().await;
+
     let configuration = {
         let mut c = get_configuration().expect("Failed to read application configuration");
         // Use a different database for each test case
         c.database.database_name = Uuid::new_v4().to_string();
         // Port zero will provide random port from the OS
         c.application.port = 0;
+        c.email_client.base_url = email_server.uri();
         c
     };
 
@@ -62,6 +67,7 @@ pub async fn spawn_app() -> TestApp {
     TestApp {
         serve_address,
         db_conn_pool: get_connection_pool(&configuration.database),
+        email_server,
     }
 }
 
