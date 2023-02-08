@@ -18,6 +18,8 @@ pub struct Application {
     server: Server,
 }
 
+pub struct ApplicationBaseUrl(pub String);
+
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
         let connection_pool = get_connection_pool(&configuration.database);
@@ -40,7 +42,12 @@ impl Application {
         );
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
-        let server = run_server(listener, connection_pool, email_client)?;
+        let server = run_server(
+            listener,
+            connection_pool,
+            email_client,
+            configuration.application.base_url,
+        )?;
 
         Ok(Self { port, server })
     }
@@ -58,10 +65,13 @@ pub fn run_server(
     tcp_listener: TcpListener,
     db_conn_pool: PgPool,
     email_client: EmailClient,
+    base_url: String,
 ) -> Result<Server, std::io::Error> {
     let db_conn_pool = Data::new(db_conn_pool);
 
     let email_client = Data::new(email_client);
+
+    let base_url = Data::new(ApplicationBaseUrl(base_url));
 
     let server = HttpServer::new(move || {
         App::new()
@@ -71,6 +81,7 @@ pub fn run_server(
             .route("/subscriptions/confirm", web::get().to(confirm))
             .app_data(db_conn_pool.clone())
             .app_data(email_client.clone())
+            .app_data(base_url.clone())
     })
     .listen(tcp_listener)?
     .run();
