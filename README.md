@@ -1,6 +1,6 @@
 # Rusty Newsletter
 
-A simple newsletter service in Rust based on "Zero To Production In Rust" book. Used mainly as learning resource
+A simple newsletter service in Rust based on "Zero To Production In Rust" book. Used mainly as a learning resource.
 
 ## Resources
 
@@ -19,6 +19,7 @@ A simple newsletter service in Rust based on "Zero To Production In Rust" book. 
 * Integration tests working with PostgreSQL database
 * Unit testing using different approaches
 * Input parsing and validation
+* Proper error handling
 * Structured logging and tracing
 * Ability to specify config for different environments
 
