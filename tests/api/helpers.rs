@@ -2,6 +2,8 @@ use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, PasswordHashe
 use once_cell::sync::Lazy;
 use rusty_newsletter::{
     configuration::{get_configuration, DatabaseSettings},
+    email_client::EmailClient,
+    issue_delivery_worker::{try_execute_task, ExecutionOutcome},
     startup::{get_connection_pool, Application},
     telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
@@ -30,6 +32,7 @@ pub struct TestApp {
     pub email_server: MockServer,
     pub test_user: TestUser,
     pub api_client: reqwest::Client,
+    pub email_client: EmailClient,
 }
 
 /// Confirmation links embedded in the request to the email API.
@@ -162,6 +165,18 @@ impl TestApp {
         let plain_text = get_link(body["TextBody"].as_str().unwrap());
         ConfirmationLinks { html, plain_text }
     }
+
+    pub async fn dispatch_all_pending_emails(&self) {
+        loop {
+            if let ExecutionOutcome::EmptyQueue =
+                try_execute_task(&self.db_conn_pool, &self.email_client)
+                    .await
+                    .unwrap()
+            {
+                break;
+            }
+        }
+    }
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -195,14 +210,13 @@ pub async fn spawn_app() -> TestApp {
         .unwrap();
 
     let test_app = TestApp {
-        serve_address: format!("http://localhost:{application_port}",),
+        serve_address: format!("http://localhost:{}", application_port),
         port: application_port,
-        db_conn_pool: get_connection_pool(&configuration.database)
-            .await
-            .expect("Failed to connect to the database"),
+        db_conn_pool: get_connection_pool(&configuration.database),
         email_server,
         test_user: TestUser::generate(),
         api_client: client,
+        email_client: configuration.email_client.client(),
     };
 
     test_app.test_user.store(&test_app.db_conn_pool).await;
