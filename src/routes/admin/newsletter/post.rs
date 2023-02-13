@@ -1,9 +1,17 @@
-use actix_web::{web::{ReqData, self}, HttpResponse};
+use actix_web::{
+    web::{self, ReqData},
+    HttpResponse,
+};
 use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 use sqlx::PgPool;
 
-use crate::{domain::SubscriberEmail, email_client::EmailClient, authentication::UserId, utils::{e500, see_other}};
+use crate::{
+    authentication::UserId,
+    domain::SubscriberEmail,
+    email_client::EmailClient,
+    utils::{e500, see_other},
+};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {

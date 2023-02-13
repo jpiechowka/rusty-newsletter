@@ -5,7 +5,7 @@ use rusty_newsletter::{
 };
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>{
+async fn main() -> anyhow::Result<()> {
     let subscriber =
         get_tracing_subscriber("rusty-newsletter".into(), "info".into(), std::io::stdout);
     init_tracing_subscriber(subscriber);
