@@ -4,5 +4,3 @@ database:
   require_ssl: true
 email_client:
   base_url: "https://api.postmarkapp.com"
-  # TODO: change to the single sender email authorized on Postmark
-  sender_email: "something@postmark.com"
