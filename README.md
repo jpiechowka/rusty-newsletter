@@ -20,6 +20,7 @@ A simple newsletter service in Rust based on "Zero To Production In Rust" book. 
 * Unit testing using different approaches
 * Input parsing and validation
 * Proper error handling
+* Authentication
 * Structured logging and tracing
 * Ability to specify config for different environments
 
