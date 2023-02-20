@@ -47,7 +47,7 @@ anyhow = "1.0.40"
 base64 = "0.13.0"
 argon2 = { version = "0.4", features = ["std"] }
 validator = "0.15.0"
-tracing-actix-web = "0.6"
+tracing-actix-web = "0.7"
 secrecy = { version = "0.8", features = ["serde"] }
 actix-web-flash-messages = { version = "0.4", features = ["cookies"] }
 actix-session = { version = "0.6", features = ["redis-rs-tls-session"] }
